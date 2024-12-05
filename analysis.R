@@ -238,10 +238,10 @@ summary(party_error_minimal_controls_national)
 model_dataset |>
   ggplot(aes(x = pct_estimate, y = vote_share)) +
   geom_point() +
-  geom_smooth(aes(color = "one"), method = lm, formula = y ~ x) +
-  geom_line(aes(x=50, color = "two")) +
-  geom_line(aes(y=50, color = "two")) +
-  scale_color_manual(values = c("#6c008c", "#ffbb00")) +
+  geom_smooth(aes(color = "one"), method = "lm", formula = y ~ x) +
+  geom_line(aes(x=50, color = "two"), size = 1) +
+  geom_line(aes(y=50, color = "two"), size = 1) +
+  scale_color_manual(values = c("#6c008c", "#0229d6")) +
   labs(title = "Vote Estimate from Polls Compared to Actual Vote Results",
        subtitle = "1968-2024") +
   xlab("Estimated Percent of Vote") +
@@ -262,7 +262,7 @@ national_data |>
   geom_smooth(aes(color = "one"), method = lm, formula = y ~ x) +
   geom_line(aes(x=50, color = "two"), size = 1) +
   geom_line(aes(y=50, color = "two"), size = 1) +
-  scale_color_manual(values = c("#6c008c", "#ba8900")) +
+  scale_color_manual(values = c("#6c008c", "#0229d6")) +
   labs(title = "National Vote Estimate from Polls Compared to Actual National Vote Results",
        subtitle = "1968-2024") +
   xlab("Estimated Percent of Vote") +
@@ -285,7 +285,7 @@ national_data_2024 |>
   geom_smooth(aes(color = "one"), method = lm, formula = y ~ x) +
   geom_line(aes(x=50, color = "two"), size = 1) +
   geom_line(aes(y=50, color = "two"), size = 1) +
-  scale_color_manual(values = c("#6c008c", "#ba8900")) +
+  scale_color_manual(values = c("#6c008c", "#0229d6")) +
   labs(title = "National Vote Estimate from Polls Compared to Actual National Vote Results",
        subtitle = "2024") +
   xlab("Estimated Percent of Vote") +
@@ -305,7 +305,7 @@ national_data_2024 |>
   geom_smooth(aes(color = "one"), method = lm, formula = y ~ x) +
   geom_line(aes(x=50, color = "two"), size = 1) +
   geom_line(aes(y=50, color = "two"), size = 1) +
-  scale_color_manual(values = c("#6c008c", "#ba8900")) +
+  scale_color_manual(values = c("#6c008c", "#0229d6")) +
   labs(title = "National Vote Estimate from Polls Compared to Actual National Vote Results 2024") +
   xlab("Estimated Percent of Vote") +
   ylab("Actual Percent of Vote") +
@@ -330,7 +330,7 @@ national_data_post_2016 |>
   geom_smooth(aes(color = "one"), method = lm, formula = y ~ x) +
   geom_line(aes(x=50, color = "two"), size = 1) +
   geom_line(aes(y=50, color = "two"), size = 1) +
-  scale_color_manual(values = c("#6c008c", "#ba8900")) +
+  scale_color_manual(values = c("#6c008c", "#0229d6")) +
   labs(title = "National Vote Estimate from Polls Compared to Actual National Vote Results",
        subtitle = "2016-2024") +
   xlab("Estimated Percent of Vote") +
@@ -341,6 +341,44 @@ national_data_post_2016 |>
     panel.grid.minor = element_line(color = "grey85"),
     legend.position = "none"
   )
+
+### Histogram of Margin Errors
+
+model_dataset |>
+  filter(state == "National") |>
+  ggplot() +
+  geom_histogram(aes(x = margin_error), binwidth = 1) +
+  labs(title = "N Days where Candidate Lead is within X Percent of Actual Victory Margin",
+       subtitle = "National Numbers Only, 1968-2024",
+       caption = "One Obervation is One day of National Polling Averages") +
+  xlab("Candidate Lead") +
+  ylab("Number of Days") +
+  scale_x_continuous(breaks = c(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26)) +
+  theme(
+    panel.background = element_blank(),
+    panel.grid.major = element_line(color = "grey70"),
+    panel.grid.minor = element_line(color = "grey85"),
+    legend.position = "none"
+  )
+
+national_data_post_2016 |>
+  ggplot() +
+  geom_histogram(aes(x = margin_error), binwidth = 1) +
+  labs(title = "N Days where Candidate Lead is within X Percent of Actual Victory Margin",
+       subtitle = "National Numbers Only, 2016-2024",
+       caption = "One Obervation is One day of National Polling Averages") +
+  xlab("Candidate Lead") +
+  ylab("Number of Days") +
+  theme(
+    panel.background = element_blank(),
+    panel.grid.major = element_line(color = "grey70"),
+    panel.grid.minor = element_line(color = "grey85"),
+    legend.position = "none"
+  )
+
+more_6_moe <- model_dataset |> filter(state == "National") |> filter(margin_error > 6) |> nrow()
+
+grave_error_prob <- more_6_moe / model_dataset |> filter(state == "National") |> nrow()
 
 ###################################################################
 # Save Full Model Dataset with all Variables for faster shiny app #
