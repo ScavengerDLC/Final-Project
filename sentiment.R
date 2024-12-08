@@ -2,6 +2,7 @@ library(tidyverse)
 library(udpipe)
 library(ggplot2)
 library(tidytext)
+library(textdata)
 library(igraph)
 library(tibbletime)
 

@@ -94,7 +94,7 @@ server <- function(input, output) {
       geom_line(aes(y=50, color = "two")) +
       scale_color_manual(values = c("#6c008c", "#ba8900")) +
       labs(title = "Vote Estimate from Polls Compared to Actual Vote Results",
-           subtitle = "2016-2024") +
+           subtitle = paste0(year_min, "-", year_max)) +
       xlab("Estimated Percent of Vote") +
       ylab("Actual Percent of Vote") +
       theme(

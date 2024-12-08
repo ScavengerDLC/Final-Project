@@ -1,7 +1,6 @@
 library(tidyverse)
 library(lubridate)
 library(ggplot2)
-library(arrow)
 library(dplyr)
 
 ################################################################################
@@ -408,11 +407,6 @@ national_data |>
   )
 
 ggsave(paste0(path, "average_afinn_vs_vote_share.png"))
-### Vote Share Vs Average Bing
-national_data |>
-  ggplot(aes(x = average_bing, y = vote_share)) +
-  geom_point() +
-  geom_smooth(method = lm)
 
 ### pct_estimate vs vote_share All
 model_dataset |>
