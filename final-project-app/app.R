@@ -9,41 +9,71 @@
 
 library(shiny)
 library(plotly)
+library(ggplot2)
+library(lubridate)
+library(shinyFeedback)
 library(lubridate)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Estimated Vote Share Vs. Actual Vote Share"),
+  titlePanel("Election Data App"),
   
   # Sidebar with a slider input for number of bins 
-  sidebarLayout(
-    sidebarPanel(
-      sliderInput("year_max",
-                  "Upper Bound Year:",
-                  min = 1968,
-                  max = 2024,
-                  value = 2024),
-      sliderInput("year_min",
-                  "Lower Bound Year:",
-                  min = 1968,
-                  max = 2024,
-                  value = 2016)
-    ),
     
-    # Show a plot of the generated distribution
+    # Pannel
     mainPanel(
-      plotlyOutput("votePlot")
+      tabsetPanel(
+        ### HomePage
+        tabPanel("Homepage", textOutput(outputId = "landing")),
+        
+        ### Historical Polling Averages
+        tabPanel("Historical Polling Averages", plotOutput("votePlot"),
+                 sliderInput("year_max",
+                             "Upper Bound Year:",
+                             min = 1968,
+                             max = 2024,
+                             value = 2024,
+                             step = 4),
+                 sliderInput("year_min",
+                             "Lower Bound Year:",
+                             min = 1968,
+                             max = 2024,
+                             value = 2016,
+                             step = 4)),
+        
+        ### sentiment Over an Election Cycle Compared to Poll
+        tabPanel("Sentiment vs Polls over An Election Cycle", 
+                 plotOutput("pollTrend"),
+                 plotOutput("sentimentTrend"),
+                 sliderInput("year_election",
+                             "Select Year:",
+                             min = 1968,
+                             max = 2024,
+                             value = 2016,
+                             step = 4))
+                 )
+      
+      
     )
   )
-)
+
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
+  ### Homepage message
+  output$landing <- renderText("Welcome to Chris Fierro's Election Data App (Coded in R).
+                               There are various interactive graphs found in the various
+                               tabs. Polling Data comes from 538 polling averages.
+                               Sentiment is gathered from NYTimes articles that 
+                               cover the candidates in each year. NYTimes search
+                               API was used to find articles.")
   
-  output$votePlot <- renderPlotly({
+  
+  
+  output$votePlot <- renderPlot({
     # Set Year bounds to filter for
     year_max <- input$year_max
     
@@ -72,6 +102,52 @@ server <- function(input, output) {
         panel.grid.major = element_line(color = "grey70"),
         panel.grid.minor = element_line(color = "grey85"),
         legend.position = "none"
+      )
+  })
+  
+  output$pollTrend <- renderPlot({
+    election_year <- input$year_election
+    
+    national <- read.csv("national_data.csv")
+    
+    national <- national |> mutate(date = ymd(date))
+    
+    national |>
+      filter(year == election_year) |>
+      group_by(party) |>
+      ggplot() +
+      geom_line(aes(x = date, y = pct_estimate, color = party)) +
+      scale_color_manual(values = c("blue", "red")) +
+      labs(title = "538 Election Estimate",
+           subtitle = paste0("National Numbers, ", election_year)) +
+      xlab("Date") +
+      ylab("Estimated Candidate Support") +
+      theme(
+        panel.grid.major = element_line(color = "grey60"),
+        panel.grid.minor = element_line(color = "grey75")
+      )
+  })
+  
+  output$sentimentTrend <- renderPlot({
+    election_year <- input$year_election
+    
+    national <- read.csv("national_data.csv")
+    
+    national <- national |> mutate(date = ymd(date))
+    
+    national |>
+      filter(year == election_year, !is.na(daily_bing)) |>
+      group_by(party) |>
+      ggplot() +
+      geom_line(aes(x = date, y = daily_bing, color = party)) +
+      scale_color_manual(values = c("blue", "red")) +
+      labs(title = "NYTimes Average Bing Sentiment for Each Candidate",
+           subtitle = paste0(election_year)) +
+      xlab("Date") +
+      ylab("Bing Sentiment") +
+      theme(
+        panel.grid.major = element_line(color = "grey60"),
+        panel.grid.minor = element_line(color = "grey75")
       )
   })
 }

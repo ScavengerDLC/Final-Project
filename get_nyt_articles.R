@@ -109,6 +109,8 @@ article_urls <- data.frame()
 #############################
 
 ### If you do not have one: you can make one for free here: https://developer.nytimes.com/get-started
+### This key will work, but you should make your own because there is a non 0 chance 
+### that my key won't have any uses when you attempt to run this
 key <- "yKfZ0OFrJ1Yv7EnALtHTS6OTNnFgFFqR"
 
 
@@ -132,7 +134,7 @@ key <- "yKfZ0OFrJ1Yv7EnALtHTS6OTNnFgFFqR"
 ### presidential_candidates dataframe
 
 ### The For Loop to get Article URLs and publication dates from NYT API
-for (i in 11:30) {
+for (i in 1:30) {
   ### Set Candidate Name
   name <- presidential_candidates$candidate[[i]]
   
@@ -231,13 +233,13 @@ for (i in 11:30) {
 
 ### Save Article Urls to Disk for Safe Keeping
 
-write.csv(article_urls, paste0(path, "article_urls.csv"))
+write.csv(article_urls, paste0(path, "article_info/article_urls.csv"))
 
 ###############################
 # Step 2 Getting Article Text #
 ###############################
 ### Read CSV that is stored locally 
-article_urls <- read.csv(paste0(path, "article_urls.csv"))
+article_urls <- read.csv(paste0(path, "article_info/article_urls.csv"))
 
 ### Get rid of artifact observation number column
 article_urls <- article_urls |> select(!X)
@@ -258,25 +260,36 @@ article_urls <- article_urls |> select(!X)
 all_articles_text <- data.frame(matrix(NA, nrow = 0, ncol = 4))
 names(all_articles_text) <- c("candidate", "year", "date", "text")
 
-### For loop that will extract text
-### This mostly works, but needs a new dataset for article text
-### Try getting new links at 7:30 tomorrow
+### A note on this for loop: 
+### I wanted to be nice to the NYTimes servers and not access 3000 articles very
+### quickly, especially because I don't want to get blocked by them! So I set up
+### a Sys.sleep() to pause the for loop. This introduces the probability 
+### that you will get a network error. The code works perfectly fine, however
+### you will occasionally get a 504 error. This is just a server hiccup on the 
+### end of the NYTimes, I'm not quite sure how to force my code to run through
+### the error or run the last iteration again on an error. 
+### When gathering the text of the 3000 articles the first time, I simply ran the 
+### code and whenver there was a 504 error, I would adjust the lowerbound
+### of the for loop.It is very random when you'll get a 504 loop. I generated 
+### 1500 articles in one go one time and just under 100 another. 
+
+
 for (k in 1:3000) {
   ### Set URL
-  url <- article_urls$web_url[[893]]
+  url <- article_urls$web_url[[k]]
   
   ### Get HTML
   article_webpage <- read_html(url)
   
   ### Set Article Publication Date
   
-  article_date <- article_urls$pub_date[[893]]
+  article_date <- article_urls$pub_date[[k]]
   
   ### Set Candidate
-  candidate_from_result <- article_urls$candidate[[893]]
+  candidate_from_result <- article_urls$candidate[[k]]
   
   ### Set Election Cycle Year
-  election_cycle <- article_urls$year[[893]]
+  election_cycle <- article_urls$year[[k]]
   
   
   ### Get Article Text  
@@ -312,5 +325,6 @@ for (k in 1:3000) {
   Sys.sleep(13)
 }
 
+### Write Article Text to CSV
 
-
+write.csv(all_articles_text, file = paste0(path, "article_info/article_text.csv"))

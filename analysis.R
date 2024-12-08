@@ -26,6 +26,10 @@ polling_data <- read.csv(paste0(path, "polling_data.csv"))
 
 election_data <- read.csv(paste0(path, "vote_share_data.csv"))
 
+sentiment_afinn <- read.csv(paste0(path, "sentiment_afinn.csv"))
+
+sentiment_bing <- read.csv(paste0(path, "sentiment_bing.csv"))
+
 
 ########################
 # Remove CSV Index Row #
@@ -35,10 +39,17 @@ polling_data <- polling_data |> select(!X)
 
 election_data <- election_data |> select(!X)
 
+sentiment_afinn <- sentiment_afinn |> select(!X)
+
+sentiment_bing <- sentiment_bing |> select(!X)
+
 ###################
 # Join Dataframes #
 ###################
 model_dataset <- polling_data |> left_join(election_data, by = c("party", "year", "state"))
+
+model_dataset <- model_dataset |> left_join(sentiment_afinn, by = c("candidate", "date", "year")) |>
+  left_join(sentiment_bing, by = c("candidate", "date", "year"))
 
 ###################################################
 # Create Difference between prediction and result #
@@ -65,7 +76,6 @@ model_dataset <- model_dataset |>
   select(!election_day & !start_date_2024_adjustment)
 
 ### Set True False to 1 and 0 respectively
-
 model_dataset <- model_dataset |>
   mutate(incumbant_party = ifelse(incumbant_party == TRUE, 1, 0),
          winner = ifelse(winner == TRUE, 1, 0))
@@ -228,11 +238,181 @@ party_error_minimal_controls_national <- lm(polling_difference ~ dummy_party + y
 
 summary(party_error_minimal_controls_national)
 
+###############################
+# Voting Regressions End Here #
+###############################
+
+####################################
+# Sentiment Regressions Begin Here #
+####################################
+
+########################################
+# Regression voting_share ~ daily_bing #
+########################################
+### To save time, I'll use the "minimal controls" set up that I've been using 
+### for other regressions
+
+### By Party: All Data
+
+# Republicans
+republican_daily_bing <- lm(vote_share ~ daily_bing + year + incumbant_party, data = republican)
+summary(republican_daily_bing)
+
+# Democrats
+democrat_daily_bing <- lm(vote_share ~ daily_bing + year + incumbant_party, data = democrat)
+summary(democrat_daily_bing)
+
+### By Party: National Only
+
+# Republicans
+national_republican_daily_bing <- lm(vote_share ~ daily_bing + year + incumbant_party, data = republican_national)
+summary(national_republican_daily_bing)
+# Democrats
+national_democrat_daily_bing <- lm(vote_share ~ daily_bing + year + incumbant_party, data = democrat_national)
+summary(national_democrat_daily_bing)
+
+### No Party Separation: All Data
+
+daily_bing_regression <- lm(vote_share ~ daily_bing + year + incumbant_party, data = model_dataset)
+summary(daily_bing_regression)
+
+### No Party Separation: National Only
+daily_bing_national_regression <- lm(vote_share ~ daily_bing + year + incumbant_party, data = national_data)
+summary(daily_bing_national_regression)
+
+### No trend here exept for republicans. Might mean that they are more unbiased covering 
+### republicans, while they say a similar thing about dems no matter what. However, it could
+### also just be finding a positive relationship by chance. 
+### Other sentiment regressions will shed more light
+
+##########################################
+# Regression voting_share ~ average_bing #
+##########################################
+
+### By Party: All Data
+
+# Republicans
+republican_average_bing <- lm(vote_share ~ average_bing + year + incumbant_party, data = republican)
+summary(republican_average_bing)
+
+# Democrats
+democrat_average_bing <- lm(vote_share ~ average_bing + year + incumbant_party, data = democrat)
+summary(democrat_average_bing)
+
+### By Party: National Only
+
+# Republicans
+national_republican_average_bing <- lm(vote_share ~ average_bing + year + incumbant_party, data = republican_national)
+summary(national_republican_average_bing)
+# Democrats
+national_democrat_average_bing <- lm(vote_share ~ average_bing + year + incumbant_party, data = democrat_national)
+summary(national_democrat_average_bing)
+
+### No Party Separation: All Data
+
+average_bing_regression <- lm(vote_share ~ average_bing + year + incumbant_party, data = model_dataset)
+summary(average_bing_regression)
+
+### No Party Separation: National Only
+average_bing_national_regression <- lm(vote_share ~ average_bing + year + incumbant_party, data = national_data)
+summary(average_bing_national_regression)
+
+### Stronger evidence for party difference in how NYTimes covers candidates vs results 
+### but still not visible in national numbers only 
+
+#########################################
+# Regression voting_share ~ daily_afinn #
+#########################################
+
+### By Party: All Data
+
+# Republicans
+republican_daily_afinn <- lm(vote_share ~ daily_afinn + year + incumbant_party, data = republican)
+summary(republican_daily_afinn)
+
+# Democrats
+democrat_daily_afinn <- lm(vote_share ~ daily_afinn + year + incumbant_party, data = democrat)
+summary(democrat_daily_afinn)
+
+### By Party: National Only
+
+# Republicans
+national_republican_daily_afinn <- lm(vote_share ~ daily_afinn + year + incumbant_party, data = republican_national)
+summary(national_republican_daily_afinn)
+# Democrats
+national_democrat_daily_afinn <- lm(vote_share ~ daily_afinn + year + incumbant_party, data = democrat_national)
+summary(national_democrat_daily_afinn)
+
+### No Party Separation: All Data
+
+daily_afinn_regression <- lm(vote_share ~ daily_afinn + year + incumbant_party, data = model_dataset)
+summary(daily_afinn_regression)
+
+### No Party Separation: National Only
+daily_afinn_national_regression <- lm(vote_share ~ daily_afinn + year + incumbant_party, data = national_data)
+summary(daily_afinn_national_regression)
+
+
+
+###########################################
+# Regression voting_share ~ average_afinn #
+###########################################
+
+### By Party: All Data
+
+# Republicans
+republican_average_afinn <- lm(vote_share ~ average_afinn + year + incumbant_party, data = republican)
+summary(republican_average_afinn)
+
+# Democrats
+democrat_average_afinn <- lm(vote_share ~ average_afinn + year + incumbant_party, data = democrat)
+summary(democrat_average_afinn)
+
+### By Party: National Only
+
+# Republicans
+national_republican_average_afinn <- lm(vote_share ~ average_afinn + year + incumbant_party, data = republican_national)
+summary(national_republican_average_afinn)
+# Democrats
+national_democrat_average_afinn <- lm(vote_share ~ average_afinn + year + incumbant_party, data = democrat_national)
+summary(national_democrat_average_afinn)
+
+### No Party Separation: All Data
+
+average_afinn_regression <- lm(vote_share ~ average_afinn + year + incumbant_party, data = model_dataset)
+summary(average_afinn_regression)
+
+### No Party Separation: National Only
+average_afinn_national_regression <- lm(vote_share ~ average_afinn + year + incumbant_party, data = national_data)
+summary(average_afinn_national_regression)
 
 
 ##############
 # GRAPH TIME #
 ##############
+
+### Vote share vs Average Afinn Score
+national_data |>
+  ggplot(aes(x = average_afinn, y = vote_share)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  labs(title = "Average AFINN Score with National Vote Share",
+                               subtitle = "1968-2024") +
+  xlab("Average AFINN Score of mentions by NYTimes") +
+  ylab("Actual Percent of Vote") +
+  theme(
+    panel.background = element_blank(),
+    panel.grid.major = element_line(color = "grey70"),
+    panel.grid.minor = element_line(color = "grey85"),
+    legend.position = "none"
+  )
+
+ggsave(paste0(path, "average_afinn_vs_vote_share.png"))
+### Vote Share Vs Average Bing
+national_data |>
+  ggplot(aes(x = average_bing, y = vote_share)) +
+  geom_point() +
+  geom_smooth(method = lm)
 
 ### pct_estimate vs vote_share All
 model_dataset |>
@@ -253,7 +433,7 @@ model_dataset |>
     legend.position = "none"
   )
 
-
+ggsave(paste0(path, "vote_estimate_vs_vote_share.png"))
 
 ### pct_estimate vs vote_share National
 national_data |>
@@ -275,7 +455,7 @@ national_data |>
     panel.grid.minor = element_line(color = "grey85"),
     legend.position = "none"
   )
-
+ggsave(paste0(path, "national_vote_estimate_vs_vote_share.png"))
 
 ### pct_estimate vs vote_share National 2024
 
@@ -296,6 +476,8 @@ national_data_2024 |>
     panel.grid.minor = element_line(color = "grey85"),
     legend.position = "none"
   )
+
+ggsave(paste0(path, "national_2024_vote_estimate_vs_vote_share.png"))
 
 ### With Yaxis adjustment
 
@@ -342,6 +524,7 @@ national_data_post_2016 |>
     legend.position = "none"
   )
 
+ggsave(paste0(path, "national_post_2016_vote_estimate_vs_vote_share.png"))
 ### Histogram of Margin Errors
 
 model_dataset |>
@@ -351,7 +534,7 @@ model_dataset |>
   labs(title = "N Days where Candidate Lead is within X Percent of Actual Victory Margin",
        subtitle = "National Numbers Only, 1968-2024",
        caption = "One Obervation is One day of National Polling Averages") +
-  xlab("Candidate Lead") +
+  xlab("Candidate Lead Error") +
   ylab("Number of Days") +
   scale_x_continuous(breaks = c(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26)) +
   theme(
@@ -361,13 +544,15 @@ model_dataset |>
     legend.position = "none"
   )
 
+ggsave(paste0(path, "historical_margin_of_error_histogram.png"))
+
 national_data_post_2016 |>
   ggplot() +
   geom_histogram(aes(x = margin_error), binwidth = 1) +
   labs(title = "N Days where Candidate Lead is within X Percent of Actual Victory Margin",
        subtitle = "National Numbers Only, 2016-2024",
        caption = "One Obervation is One day of National Polling Averages") +
-  xlab("Candidate Lead") +
+  xlab("Candidate Lead Error") +
   ylab("Number of Days") +
   theme(
     panel.background = element_blank(),
@@ -376,27 +561,49 @@ national_data_post_2016 |>
     legend.position = "none"
   )
 
+ggsave(paste0(path, "post_2016_margin_of_error_histogram.png"))
+
+
+national_data |>
+  filter(year ==2024) |>
+  group_by(party) |>
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = pct_estimate, color = party)) +
+  scale_color_manual(values = c("blue", "red")) +
+  labs(title = "538 Election Estimate",
+       subtitle = "National Numbers, 2024") +
+  xlab("Date") +
+  ylab("Estimated Candidate Support") +
+  theme(
+    panel.grid.major = element_line(color = "grey60"),
+    panel.grid.minor = element_line(color = "grey75")
+  )
+
+ggsave(paste0(path, "538_estimate.png"))
+
+national_data |>
+  filter(year ==2024, !is.na(daily_bing)) |>
+  group_by(party) |>
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = daily_bing, color = party)) +
+  scale_color_manual(values = c("blue", "red")) +
+  labs(title = "NYTimes Average Bing Sentiment for Each Candidate",
+       subtitle = "2024") +
+  xlab("Date") +
+  ylab("Bing Sentiment") +
+  theme(
+    panel.grid.major = element_line(color = "grey60"),
+    panel.grid.minor = element_line(color = "grey75")
+  )
+
+ggsave(paste0(path, "NYT_Bing.png"))
+
+### calculate Odds of Looking at 538 when the estimate is outside of margin of error
 more_6_moe <- model_dataset |> filter(state == "National") |> filter(margin_error > 6) |> nrow()
 
 grave_error_prob <- more_6_moe / model_dataset |> filter(state == "National") |> nrow()
 
-###################################################################
-# Save Full Model Dataset with all Variables for faster shiny app #
-# Grouped by Year                                                 #
-###################################################################
-
-### This is the only way I know how to do this right now
-### Write csv
+### Write Necessary Dataframes to Disk
 write.csv(model_dataset, paste0(path, "model_dataset.csv"))
-### read csv as parquet
-model_parquet <- open_dataset(
-  sources = "model_dataset.csv",
-  col_types = schema(facility_id = string()),
-  format = "csv"
-)
-### group by year
 
-model_parquet <- model_parquet |> group_by(model_parquet$year)
-
-
-### write as partitioned parquet
+write.csv(national_data, paste0(path, "national_data.csv"))
